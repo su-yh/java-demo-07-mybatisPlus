@@ -6,7 +6,7 @@
 
     <groupId>com.suyh</groupId>
     <version>1.0-SNAPSHOT</version>
-    <artifactId>demo-07-db-mybatis-plus</artifactId>
+    <artifactId>java-demo-springboot-07-mybatisPlus</artifactId>
 
     <packaging>pom</packaging>
 
