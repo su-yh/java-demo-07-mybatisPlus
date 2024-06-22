@@ -4,9 +4,8 @@
 
 package com.suyh.mp.dynamic.config;
 
-import com.baomidou.dynamic.datasource.DynamicRoutingDataSource;
 import com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DynamicDataSourceAutoConfiguration;
-import com.suyh.mp.dynamic.constant.DynamicConstants;
+import com.suyh.mp.dynamic.config.properties.DynamicDataSourceProviderProperties;
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.configuration.FluentConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -23,11 +22,10 @@ public class FlywayDbConfiguration {
     // DynamicRoutingDataSource
 
     @Bean("flyway001")
-    public FlywayMigrationInitializer flyway001(DataSource dataSource) {
+    public FlywayMigrationInitializer flyway001(DynamicDataSourceProviderProperties providerProperties) {
         // 参考：DynamicDataSourceAutoConfiguration
-        DynamicRoutingDataSource dynamicRoutingDataSource = (DynamicRoutingDataSource) dataSource;
 
-        DataSource dataSource001 = dynamicRoutingDataSource.getDataSource(DynamicConstants.DS001);
+        DataSource dataSource001 = providerProperties.getDs001();
         FluentConfiguration masterFlywayConfig = new FluentConfiguration();
         masterFlywayConfig.baselineOnMigrate(true)
                 .dataSource(dataSource001)
@@ -42,11 +40,10 @@ public class FlywayDbConfiguration {
 
 
     @Bean("flyway002")
-    public FlywayMigrationInitializer flyway002(DataSource dataSource) {
+    public FlywayMigrationInitializer flyway002(DynamicDataSourceProviderProperties providerProperties) {
         // 参考：DynamicDataSourceAutoConfiguration
-        DynamicRoutingDataSource dynamicRoutingDataSource = (DynamicRoutingDataSource) dataSource;
 
-        DataSource dataSource002 = dynamicRoutingDataSource.getDataSource(DynamicConstants.DS002);
+        DataSource dataSource002 = providerProperties.getDs002();
         FluentConfiguration slaveFlywayConfig = new FluentConfiguration();
         slaveFlywayConfig.baselineOnMigrate(true)
                 .dataSource(dataSource002)

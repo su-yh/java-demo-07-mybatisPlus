@@ -2,6 +2,8 @@ spring:
   datasource:
     dynamic:
       enabled: true
+      # 这里的值需要与代码中指定的所有的数据源中的其中一个。
+      # 如果不填则该值默认为master ，这就需要在这些数据源中将其中一个的名称定义为master 才可以匹配上。
       primary: ds001
       # 严格匹配数据源，默认false, true 未匹配到数据源时抛异常，false 使用默认数据源
       strict: true
