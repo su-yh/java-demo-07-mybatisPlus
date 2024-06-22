@@ -1,0 +1,9 @@
+spring:
+  config:
+    import:
+      - application-datasource.yaml
+      - application-flyway.yaml
+debug: true
+
+
+

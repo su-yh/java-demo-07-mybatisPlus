@@ -1,0 +1,8 @@
+**/.idea/
+**/*.iml
+**/logs/
+**/target/
+
+**/.flattened-pom.xml
+
+**/.DS_Store
