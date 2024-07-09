@@ -97,6 +97,7 @@ public interface BaseMapperX<T> extends BaseMapper<T> {
 
     /**
      * 批量插入，适合大量数据插入
+     * 批量插入需要开启：rewriteBatchedStatements=true
      *
      * @param entities 实体们
      */
@@ -106,6 +107,7 @@ public interface BaseMapperX<T> extends BaseMapper<T> {
 
     /**
      * 批量插入，适合大量数据插入
+     * 批量插入需要开启：rewriteBatchedStatements=true
      *
      * @param entities 实体们
      * @param size     插入数量 Db.saveBatch 默认为 1000
