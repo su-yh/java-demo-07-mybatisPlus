@@ -61,7 +61,8 @@ public class LambdaQueryWrapperX<T> extends LambdaQueryWrapper<T> {
         }
 
         if (obj instanceof CharSequence) {
-            return !StringUtils.hasText((CharSequence)obj);
+            // suyh - 这里如果字符串传入的是空白字符串也应该让其去按这个值去数据库中匹配，而不是忽略这个值，丢弃这个匹配条件。
+            // return !StringUtils.hasText((CharSequence)obj);
         } else if (obj instanceof Map) {
             return ((Map<?, ?>) obj).isEmpty();
         } else if (obj instanceof Iterable) {
