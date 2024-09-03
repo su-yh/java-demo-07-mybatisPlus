@@ -1,4 +1,4 @@
-package com.suyh1101.handler.enlist;
+package com.leomaster.mp.typehandler.enlist;
 
 import com.baomidou.mybatisplus.annotation.EnumValue;
 import com.baomidou.mybatisplus.annotation.IEnum;
@@ -120,7 +120,7 @@ public abstract class AbstractEnumListTypeHandler<E extends Enum<E>> extends Bas
     @Override
     public void setNonNullParameter(
             PreparedStatement ps, int i, List<E> enList, JdbcType jdbcType) throws SQLException {
-        if (enList == null || enList.isEmpty()) {
+        if (enList == null) {
             return;
         }
 
