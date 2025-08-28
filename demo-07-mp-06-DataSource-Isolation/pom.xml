@@ -14,6 +14,8 @@
 
         <spring-boot.version>2.7.4</spring-boot.version>
         <flyway.version>7.15.0</flyway.version>
+
+        <dynamic-datasource.version>3.6.1</dynamic-datasource.version>
     </properties>
 
     <dependencies>
@@ -41,6 +43,12 @@
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-boot-starter</artifactId>
             <version>3.5.4.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>dynamic-datasource-spring-boot-starter</artifactId>
+            <version>${dynamic-datasource.version}</version>
         </dependency>
 
         <dependency>
