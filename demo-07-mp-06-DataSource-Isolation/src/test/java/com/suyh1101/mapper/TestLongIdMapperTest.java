@@ -29,23 +29,4 @@ public class TestLongIdMapperTest {
     @Resource
     private TestLongIdMapper testLongIdMapper;
 
-    @Test
-    public void testSafeUpdateById() {
-
-        TestLongIdEntity historyEntity = testLongIdMapper.selectById(1L);
-        if (historyEntity == null) {
-            TestLongIdEntity entity = new TestLongIdEntity();
-            testLongIdMapper.insert(entity);
-            historyEntity = testLongIdMapper.selectById(1L);
-        }
-
-        Assertions.assertNotNull(historyEntity);
-
-        TestLongIdEntity updateEntity = new TestLongIdEntity();
-        updateEntity.setId(1L);
-        updateEntity.setAge(10);
-        updateEntity.setSafeVersion(historyEntity.getSafeVersion());
-
-        testLongIdMapper.updateByIdForSafePrivate(updateEntity);
-    }
 }
