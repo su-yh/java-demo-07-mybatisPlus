@@ -59,10 +59,10 @@ SELECT @@transaction_isolation; -- 当前会话默认
 事务隔离级别优先级：
     在我们通过客户端连接去使用事务时，优先使用的是连接客户端指定的隔离级别，如果未指定才会使用数据库服务端的隔离级别。
     在java springboot 项目中，通过是使用注解方式添加事务隔离，@DSTransactional | @Transactional
-    注解（@DSTransactional） 没有提供参数让我们配置事务隔离级别，但是 @Transactional 有提供事务隔离级别的控制。
     另外在数据库连接配置时，也可以设置隔离级别。
     所以最终的优先级顺序为：
         注解@Transactional(isolation = Isolation.SERIALIZABLE) > 连接配置 > 服务端默认配置。
 
+    特别地：注解（@DSTransactional） 没有提供参数让我们配置事务隔离级别，但是 @Transactional 有提供事务隔离级别的控制。
 
 
