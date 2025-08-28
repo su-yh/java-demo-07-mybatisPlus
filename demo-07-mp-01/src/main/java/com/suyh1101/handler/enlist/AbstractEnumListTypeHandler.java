@@ -1,4 +1,4 @@
-package com.leomaster.mp.typehandler.enlist;
+package com.suyh1101.handler.enlist;
 
 import com.baomidou.mybatisplus.annotation.EnumValue;
 import com.baomidou.mybatisplus.annotation.IEnum;

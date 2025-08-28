@@ -10,7 +10,7 @@ import lombok.Data;
  */
 @TableName(value = "test_long_id", autoResultMap = true)
 @Data
-public class TestLongIdEntity extends AbstractDeletedFlagEntity {
+public class TestLongIdEntity {
     @TableId
     private Long id;
 
