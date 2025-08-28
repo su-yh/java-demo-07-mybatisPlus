@@ -22,5 +22,6 @@
         <module>demo-07-mp-03-dynamic-datasource</module>
         <module>demo-07-mp-04-conditionalOnMapper</module>
         <module>demo-07-mp-05-BaseMapperSafeX</module>
+        <module>demo-07-mp-06-DataSource-Isolation</module>
     </modules>
 </project>

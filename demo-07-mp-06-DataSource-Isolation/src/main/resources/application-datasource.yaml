@@ -1,0 +1,12 @@
+
+
+
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://192.168.8.143:3306/suyh_tmp?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=UTF-8
+    username: suyh_tmp
+    password: suyh_tmp
+
+
