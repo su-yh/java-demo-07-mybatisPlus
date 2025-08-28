@@ -1,0 +1,25 @@
+
+mysql 支持的隔离级别值：
+    READ-UNCOMMITTED
+    READ-COMMITTED
+    REPEATABLE-READ（MySQL 默认）
+    SERIALIZABLE
+
+查看隔离级别
+SELECT @@global.transaction_isolation; -- 全局默认
+SELECT @@transaction_isolation; -- 当前会话默认
+
+临时修改全局隔离级别：
+    -- 需要有相关的权限
+    -- 这里修改，只会在服务重启前生效，重启后将会失效。
+    -- 同时，mysql 如此修改事务隔离级别，所有的数据库都将使用该事务隔离级别，没法针对某个数据库使用此隔离级别。
+    SET GLOBAL transaction_isolation = 'SERIALIZABLE';
+
+
+在我们通过客户端连接去使用事务时，优先使用的是连接客户端指定的隔离级别，如果未指定才会使用数据库服务端的隔离级别。
+在java springboot 项目中，通过是使用注解方式添加事务隔离，@DSTransactional | @Transactional
+注解（@DSTransactional） 没有提供参数让我们配置事务隔离级别，但是 @Transactional 有提供事务隔离级别的控制。
+另外在数据库连接配置时，也可以设置隔离级别，这里的优先级顺序为：@Transactional > 连接配置 > 服务端默认配置。
+
+
+
