@@ -2,9 +2,10 @@
 DROP TABLE IF EXISTS test_long_id;
 -- Long 类型的id 值
 CREATE TABLE test_long_id (
-    id bigint,
+    id bigint AUTO_INCREMENT,
     nick_name varchar(128),
     age integer,
+    version integer NOT NULL DEFAULT 0,
     delete_flag    BIGINT NULL DEFAULT 0 COMMENT '删除标记，0：未删除，非0：已删除(一般记时间戳，以纳秒为单位)',
     PRIMARY KEY (id)
 ) ENGINE=InnoDB;

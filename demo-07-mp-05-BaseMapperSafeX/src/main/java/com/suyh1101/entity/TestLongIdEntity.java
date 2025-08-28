@@ -1,5 +1,6 @@
 package com.suyh1101.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -15,7 +16,7 @@ import lombok.Data;
 @TableName(value = "test_long_id", autoResultMap = true)
 @Data
 public class TestLongIdEntity implements BaseSafeUpdate {
-    @TableId
+    @TableId(type = IdType.AUTO)
     private Long id;
 
     private String nickName;
@@ -24,10 +25,10 @@ public class TestLongIdEntity implements BaseSafeUpdate {
 
     @Version // 标注了 @Version 注解的字段被视为安全版本字段
     @TableField("version")
-    private Integer version;
+    private Integer safeVersion;
 
     @Override
     public Object getVersion() {
-        return version;
+        return safeVersion;
     }
 }
