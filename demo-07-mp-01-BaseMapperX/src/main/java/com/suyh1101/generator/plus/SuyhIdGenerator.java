@@ -16,10 +16,10 @@ import java.util.concurrent.TimeUnit;
 @Component
 public class SuyhIdGenerator implements IdentifierGenerator {
     // 最后一次生成的ID
-    private long lastId;
+    protected long lastId;
 
     // 相对开始时间时间戳
-    private final long startMs;
+    protected final long startMs;
 
     // 一个时间单位内允许生成的ID 数量
     // 这里给了18 个二进制位来存储一个时间单位内的ID
@@ -57,20 +57,60 @@ public class SuyhIdGenerator implements IdentifierGenerator {
 
     @NonNull
     public String[] nextUuids(int n) {
-        long id = nextIds(n);
+        long startId = nextIds(n);
 
         String[] uuids = new String[n];
         for (int i = 0; i < n; i++) {
-            // 一个id 的有效存储范围固定为6 个字节，超过的全部丢弃。
-            // 主要就是为base64 做处理。3 的倍数是刚刚好。
-            byte[] bytes = new byte[6];
-            for (int j = 0; j < 6; j++) {
-                bytes[j] = (byte) (id >> j);
-            }
-            uuids[i] = Base64.getEncoder().encodeToString(bytes);
+            long id = startId + n;
+            String uuidOrdered = convertUuidOrdered(id);
+            String uuidUnordered = convertUuidUnordered(id);
+            System.out.println(String.format("uuidOrdered: %s, uuidUnordered: %s", uuidOrdered, uuidUnordered));
+            uuids[i] = uuidUnordered;
         }
 
         return uuids;
+    }
+
+    protected String convertUuidOrdered (long id) {
+        // 一个id 的有效存储范围固定为6 个字节，超过的全部丢弃。
+        // 主要就是为base64 做处理。3 的倍数是刚刚好。
+        byte[] bytes = new byte[6];
+        for (int j = 0; j < 6; j++) {
+            bytes[j] = (byte) (id >> j);
+        }
+        return Base64.getEncoder().encodeToString(bytes);
+    }
+
+    protected String convertUuidUnordered (long id) {
+        // 一个id 的有效存储范围固定为6 个字节，超过的全部丢弃。
+        // 主要就是为base64 做处理。3 的倍数是刚刚好。
+        byte[] bytes = new byte[6];
+        // 取出最低字节位的数据
+        byte byte0 = (byte) (id);
+
+        int[] bits = new int[6];
+        for (int i = 0; i < bits.length; i++) {
+            bits[i] = byte0 >> i;
+        }
+
+        for (int i = 1; i < 6; i++) {
+            int bj = (byte) (id >> i); // 当前字节
+            // 每个字节的最低位都跟 byte0 的最低位交换
+            int byte1 = bits[i];   // byte0 字节的对应二进制位给当前字节使用
+            bits[i] = bj & 0b1;   // 当前位置字节的最低位，存起来给第一个字节
+
+            bytes[i] = (byte) ((bj & ~1) | byte1);
+        }
+
+        // 组装好新联通低字节的数据
+        int bt0 = 0;
+        for (int i = 0; i < bits.length; i++) {
+            bt0 |= (bits[i] << i);
+        }
+
+        bytes[0] = (byte) bt0;
+
+        return Base64.getEncoder().encodeToString(bytes);
     }
 
     public long nextId() {
@@ -121,7 +161,7 @@ public class SuyhIdGenerator implements IdentifierGenerator {
      *
      * @param curMs 当前时间戳，单位：毫秒
      */
-    private long maxId(long curMs) {
+    protected long maxId(long curMs) {
         long relativeMs = curMs - startMs;
 
         // 清理掉一个时间单位上的二进制数，然后空出ID 容量部分的二进制位

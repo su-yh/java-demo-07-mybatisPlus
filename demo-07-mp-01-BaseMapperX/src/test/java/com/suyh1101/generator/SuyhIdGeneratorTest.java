@@ -74,10 +74,10 @@ public class SuyhIdGeneratorTest {
     public void testUuids() {
         SuyhIdGenerator idGenerator = new SuyhIdGenerator();
         StopWatch stopWatch = new StopWatch();
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 100; i++) {
             stopWatch.start("i-" + i);
             String uuid = idGenerator.nextUuid();
-            System.out.println("i: " + i + ", uuid: " + uuid);
+//            System.out.println("i: " + i + ", uuid: " + uuid);
             stopWatch.stop();
         }
         System.out.println(stopWatch.prettyPrint());
