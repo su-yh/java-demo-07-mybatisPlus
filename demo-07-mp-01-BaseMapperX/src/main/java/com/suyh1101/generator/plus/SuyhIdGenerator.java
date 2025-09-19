@@ -162,7 +162,8 @@ public class SuyhIdGenerator implements IdentifierGenerator {
      * @return 返回第一个可用的id，该id + n 则为最后一个可用id
      */
     public synchronized Long obtainStartId(int n) {
-        long curMs = currentMs();
+//        long curMs = currentMs();
+        long curMs = System.currentTimeMillis();
         long maxId = maxId(curMs);
         long expectMaxId = lastId + n;
         if (expectMaxId > maxId) {
