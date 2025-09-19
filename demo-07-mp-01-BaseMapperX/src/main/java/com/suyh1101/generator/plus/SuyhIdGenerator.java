@@ -77,15 +77,9 @@ public class SuyhIdGenerator implements IdentifierGenerator {
                 return id;
             }
 
-            // TODO: suyh - 测试时使用这个
-            if (true) {
-                Thread.yield();
-                continue;
-            }
-
-            // 等到下一个时间周期
+            // 等 0.1 秒再去尝试
             try {
-                for (int i = 0; i < 100; i++) {
+                for (int i = 0; i < 10; i++) {
                     TimeUnit.MICROSECONDS.sleep(10L);
                 }
             } catch (InterruptedException ignored) {
