@@ -57,7 +57,8 @@ public class SuyhIdGeneratorTest {
 
     @Test
     public void testIds() {
-        int n = SuyhIdGenerator.TIME_UNIT_ID_CAPACITY;
+        int n = SuyhIdGenerator.MAX_SEQUENCE;
+//        n = 1;
         SuyhIdGenerator idGenerator = new SuyhIdGenerator();
         StopWatch stopWatch = new StopWatch();
         for (int i = 0; i < 10; i++) {
