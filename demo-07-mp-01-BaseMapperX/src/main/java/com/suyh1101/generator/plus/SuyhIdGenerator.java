@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * 这里使用 6 个字节来存储ID 值
+ * 其中18 位用来存储增量值，30 位用来存储时间，在这30 位里面，每一位表示1024 ms ，所以最大可使用约：34.86 年
  */
 @Component
 public class SuyhIdGenerator implements IdentifierGenerator {
