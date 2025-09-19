@@ -111,6 +111,7 @@ public class SuyhIdGenerator implements IdentifierGenerator {
             6, 18, 24, 30, 36, 42
     };
 
+    // 每一个位置的二进制位的实际值
     protected static final boolean[] BITS = new boolean[48];
 
     // 将低48位的每一位按固定乱序重新组装
@@ -142,7 +143,7 @@ public class SuyhIdGenerator implements IdentifierGenerator {
         }
 
         while (true) {
-            Long id = obtainStartId(n);
+            Long id = generateIds(n);
             if (id != null) {
                 return id;
             }
@@ -161,7 +162,7 @@ public class SuyhIdGenerator implements IdentifierGenerator {
      * @param n 希望获得id 的数量
      * @return 返回第一个可用的id，该id + n 则为最后一个可用id
      */
-    public synchronized Long obtainStartId(int n) {
+    public synchronized Long generateIds(int n) {
 //        long curMs = currentMs();
         long curMs = System.currentTimeMillis();
         long maxId = maxId(curMs);
