@@ -15,17 +15,24 @@ import java.util.concurrent.TimeUnit;
  */
 @Component
 public class SuyhIdGenerator implements IdentifierGenerator {
+    // 一个时间单位内允许生成的ID 数量
+    // 这里给了18 个二进制位来存储一个时间单位内的ID
+    public static final int MAX_SEQUENCE = 1 << 18;
+
     // 最后一次生成的ID
     protected long lastId;
 
     // 相对开始时间时间戳
     protected final long startMs;
 
-    // 一个时间单位内允许生成的ID 数量
-    // 这里给了18 个二进制位来存储一个时间单位内的ID
-    public static final int MAX_SEQUENCE = 1 << 18;
+    // 生成uuid 时是否乱序
+    protected final boolean uuidOrdered;
 
     public SuyhIdGenerator() {
+        this(false);
+    }
+
+    public SuyhIdGenerator(boolean uuidOrdered) {
         // 这个值是可以修改的，但是一个工程应该只在首次使用的时候指定，后面就只能固定该值了。
         LocalDate localDate = LocalDate.of(2025, 1, 1);
         ZonedDateTime zonedDateTime = localDate.atStartOfDay(ZoneId.of("UTC"));
@@ -42,6 +49,8 @@ public class SuyhIdGenerator implements IdentifierGenerator {
         // 何为增量值：就是在一个单位时间内（这里的单位时间是1024 毫秒），允许生成多少个ID 值，如果超过了自然是不允许的，只有等下一个单位时间才可以。
         // 当前时间以一个固定的时间偏移量，毫秒
         lastId = ((relativeMs >> 10) + 1) << (10 + 8);
+
+        this.uuidOrdered = uuidOrdered;
     }
 
     @Override
@@ -62,11 +71,8 @@ public class SuyhIdGenerator implements IdentifierGenerator {
         String[] uuids = new String[n];
         for (int i = 0; i < n; i++) {
             long id = startId + n;
-            String uuidOrdered = convertUuid(id);
-            long idUnordered = shuffleLow48Bits(id);
-            String uuidUnordered = convertUuid(idUnordered);
-            System.out.printf("uuidOrdered: %s, uuidUnordered: %s%n", uuidOrdered, uuidUnordered);
-            uuids[i] = uuidUnordered;
+            long curId = this.uuidOrdered ? id : shuffleLow48Bits(id);
+            uuids[i] = convertUuid(curId);
         }
 
         return uuids;
