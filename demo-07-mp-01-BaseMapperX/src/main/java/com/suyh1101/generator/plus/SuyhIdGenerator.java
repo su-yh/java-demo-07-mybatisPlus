@@ -65,23 +65,23 @@ public class SuyhIdGenerator implements IdentifierGenerator {
     }
 
     @Override
-    public Number nextId(Object entity) {
+    public synchronized Number nextId(Object entity) {
         return nextId();
     }
 
     @NonNull
-    public String nextUuid() {
+    public synchronized String nextUuid() {
         String[] uuids = nextUuids(1);
         return uuids[0];
     }
 
     @NonNull
-    public String[] nextUuids(int n) {
+    public synchronized String[] nextUuids(int n) {
         long startId = nextIds(n);
 
         String[] uuids = new String[n];
         for (int i = 0; i < n; i++) {
-            long id = startId + n;
+            long id = startId + i;
             long curId = this.uuidOrdered ? id : shuffleLow48Bits(id);
             uuids[i] = convertUuid(curId);
         }
@@ -89,12 +89,37 @@ public class SuyhIdGenerator implements IdentifierGenerator {
         return uuids;
     }
 
+    public synchronized long nextId() {
+        return nextIds(1);
+    }
+
+    public synchronized long nextIds(int n) {
+        if (n <= 0 || n > MAX_SEQUENCE) {
+            throw new IllegalArgumentException("Invalid number of IDs requested: " + n);
+        }
+
+        while (true) {
+            Long id = allocateIds(n);
+            if (id != null) {
+                return id;
+            }
+
+            // 等 0.1 秒再去尝试
+            try {
+                for (int i = 0; i < 10; i++) {
+                    TimeUnit.MICROSECONDS.sleep(10L);
+                }
+            } catch (InterruptedException ignored) {
+            }
+        }
+    }
+
     // 一个id 的有效存储范围固定为6 个字节，超过的全部丢弃。
     // 主要就是为base64 做处理。3 的倍数是刚刚好。
     protected static final byte[] BYTES = new byte[6];
     protected String convertUuid(long id) {
         for (int j = 0; j < 6; j++) {
-            BYTES[j] = (byte) (id >> j);
+            BYTES[j] = (byte) (id >> (j * 8));
         }
         return Base64.getEncoder().encodeToString(BYTES);
     }
@@ -133,36 +158,11 @@ public class SuyhIdGenerator implements IdentifierGenerator {
         return shuffled;
     }
 
-    public long nextId() {
-        return nextIds(1);
-    }
-
-    public long nextIds(int n) {
-        if (n <= 0 || n > MAX_SEQUENCE) {
-            throw new IllegalArgumentException("Invalid number of IDs requested: " + n);
-        }
-
-        while (true) {
-            Long id = generateIds(n);
-            if (id != null) {
-                return id;
-            }
-
-            // 等 0.1 秒再去尝试
-            try {
-                for (int i = 0; i < 10; i++) {
-                    TimeUnit.MICROSECONDS.sleep(10L);
-                }
-            } catch (InterruptedException ignored) {
-            }
-        }
-    }
-
     /**
      * @param n 希望获得id 的数量
      * @return 返回第一个可用的id，该id + n 则为最后一个可用id
      */
-    public synchronized Long generateIds(int n) {
+    protected Long allocateIds(int n) {
 //        long curMs = currentMs();
         long curMs = System.currentTimeMillis();
         long maxId = maxId(curMs);
