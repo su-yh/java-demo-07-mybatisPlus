@@ -62,55 +62,57 @@ public class SuyhIdGenerator implements IdentifierGenerator {
         String[] uuids = new String[n];
         for (int i = 0; i < n; i++) {
             long id = startId + n;
-            String uuidOrdered = convertUuidOrdered(id);
-            String uuidUnordered = convertUuidUnordered(id);
-            System.out.println(String.format("uuidOrdered: %s, uuidUnordered: %s", uuidOrdered, uuidUnordered));
+            String uuidOrdered = convertUuid(id);
+            long idUnordered = shuffleLow48Bits(id);
+            String uuidUnordered = convertUuid(idUnordered);
+            System.out.printf("uuidOrdered: %s, uuidUnordered: %s%n", uuidOrdered, uuidUnordered);
             uuids[i] = uuidUnordered;
         }
 
         return uuids;
     }
 
-    protected String convertUuidOrdered (long id) {
-        // 一个id 的有效存储范围固定为6 个字节，超过的全部丢弃。
-        // 主要就是为base64 做处理。3 的倍数是刚刚好。
-        byte[] bytes = new byte[6];
+    // 一个id 的有效存储范围固定为6 个字节，超过的全部丢弃。
+    // 主要就是为base64 做处理。3 的倍数是刚刚好。
+    protected static final byte[] BYTES = new byte[6];
+    protected String convertUuid(long id) {
         for (int j = 0; j < 6; j++) {
-            bytes[j] = (byte) (id >> j);
+            BYTES[j] = (byte) (id >> j);
         }
-        return Base64.getEncoder().encodeToString(bytes);
+        return Base64.getEncoder().encodeToString(BYTES);
     }
 
-    protected String convertUuidUnordered (long id) {
-        // 一个id 的有效存储范围固定为6 个字节，超过的全部丢弃。
-        // 主要就是为base64 做处理。3 的倍数是刚刚好。
-        byte[] bytes = new byte[6];
-        // 取出最低字节位的数据
-        byte byte0 = (byte) (id);
+    // 固定乱序映射规则（0~47表示位索引，值表示新位置）
+    protected static final int[] SHUFFLE_RULE = {
+            47, 46, 45, 44, 43, 0,
+            41, 40, 39, 38, 37, 1,
+            35, 34, 33, 32, 31, 2,
+            29, 28, 27, 26, 25, 3,
+            23, 22, 21, 20, 19, 4,
+            17, 16, 15, 14, 13, 5,
+            12, 11, 10, 9, 8, 7,
+            6, 18, 24, 30, 36, 42
+    };
 
-        int[] bits = new int[6];
-        for (int i = 0; i < bits.length; i++) {
-            bits[i] = byte0 >> i;
+    protected static final boolean[] BITS = new boolean[48];
+
+    // 将低48位的每一位按固定乱序重新组装
+    protected long shuffleLow48Bits(long id) {
+        // 每一位都存储为boolean 值
+        for (int i = 0; i < 48; i++) {
+            BITS[i] = (id & (1L << i)) != 0;
         }
 
-        for (int i = 1; i < 6; i++) {
-            int bj = (byte) (id >> i); // 当前字节
-            // 每个字节的最低位都跟 byte0 的最低位交换
-            int byte1 = bits[i];   // byte0 字节的对应二进制位给当前字节使用
-            bits[i] = bj & 0b1;   // 当前位置字节的最低位，存起来给第一个字节
-
-            bytes[i] = (byte) ((bj & ~1) | byte1);
+        // 按乱序规则重排
+        long shuffled = 0;
+        for (int i = 0; i < 48; i++) {
+            int index = SHUFFLE_RULE[i];
+            if (BITS[index]) {
+                shuffled |= (1L << i);
+            }
         }
 
-        // 组装好新联通低字节的数据
-        int bt0 = 0;
-        for (int i = 0; i < bits.length; i++) {
-            bt0 |= (bits[i] << i);
-        }
-
-        bytes[0] = (byte) bt0;
-
-        return Base64.getEncoder().encodeToString(bytes);
+        return shuffled;
     }
 
     public long nextId() {

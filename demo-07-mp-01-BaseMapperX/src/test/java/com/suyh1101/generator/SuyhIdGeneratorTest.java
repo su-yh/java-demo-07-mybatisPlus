@@ -8,7 +8,6 @@ import org.springframework.util.StopWatch;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.Base64;
 
 public class SuyhIdGeneratorTest {
     @Test
@@ -84,37 +83,4 @@ public class SuyhIdGeneratorTest {
         System.out.println(stopWatch.prettyPrint());
     }
 
-    protected String convertUuidUnordered(long id) {
-        // 提取低48位（6个字节），避免高16位干扰
-        id = id & 0xFFFF_FFFF_FFFFL;
-        byte[] bytes = new byte[6];
-
-        // 第一步：提取6个字节的原始值（正确提取每个字节）
-        for (int i = 0; i < 6; i++) {
-            bytes[i] = (byte) (id >> (i * 8)); // 每个字节占8位，正确位移
-        }
-
-        // 第二步：提取每个字节的最低位（第0位）
-        int[] lowBits = new int[6];
-        for (int i = 0; i < 6; i++) {
-            lowBits[i] = bytes[i] & 1; // 保留最低位（0或1）
-        }
-
-        // 第三步：对最低位进行乱序（示例：固定置换规则，可根据需求调整）
-        // 这里的置换规则是 [0,1,2,3,4,5] → [5,3,1,4,2,0]（示例，可自定义）
-        int[] shuffleRule = {5, 3, 1, 4, 2, 0}; // 乱序映射规则
-        int[] shuffledBits = new int[6];
-        for (int i = 0; i < 6; i++) {
-            shuffledBits[i] = lowBits[shuffleRule[i]];
-        }
-
-        // 第四步：将乱序后的最低位重新赋值给每个字节（其他位保持不变）
-        for (int i = 0; i < 6; i++) {
-            // 清空原最低位，再设置为乱序后的位
-            bytes[i] = (byte) ((bytes[i] & 0xFE) | shuffledBits[i]);
-        }
-
-        // 生成Base64编码
-        return Base64.getEncoder().encodeToString(bytes);
-    }
 }
