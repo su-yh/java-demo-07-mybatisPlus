@@ -45,6 +45,7 @@ public class SuyhIdGeneratorTest {
 
     @Test
     public void test001() {
+        // 下面几个的结果完全一样，都是10 个二进制位都为1 的数
         long a = ~((1L << 10) - 1);
         long b = -(1L << 10);
         long c = ~(1 << 10) + 1;
@@ -58,13 +59,25 @@ public class SuyhIdGeneratorTest {
     @Test
     public void testIds() {
         int n = SuyhIdGenerator.MAX_SEQUENCE;
-//        n = 1;
         SuyhIdGenerator idGenerator = new SuyhIdGenerator();
         StopWatch stopWatch = new StopWatch();
         for (int i = 0; i < 10; i++) {
             stopWatch.start("i-" + i);
             long startId = idGenerator.nextIds(n);
             System.out.println("i: " + i + ", startId: 0x" + Long.toHexString(startId));
+            stopWatch.stop();
+        }
+        System.out.println(stopWatch.prettyPrint());
+    }
+
+    @Test
+    public void testUuids() {
+        SuyhIdGenerator idGenerator = new SuyhIdGenerator();
+        StopWatch stopWatch = new StopWatch();
+        for (int i = 0; i < 1000; i++) {
+            stopWatch.start("i-" + i);
+            String uuid = idGenerator.nextUuid();
+            System.out.println("i: " + i + ", uuid: " + uuid);
             stopWatch.stop();
         }
         System.out.println(stopWatch.prettyPrint());

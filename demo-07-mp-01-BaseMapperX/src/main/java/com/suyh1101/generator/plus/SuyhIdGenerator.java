@@ -51,15 +51,26 @@ public class SuyhIdGenerator implements IdentifierGenerator {
 
     @NonNull
     public String nextUuid() {
-        long id = nextId();
-        // 一个id 的有效存储范围固定为6 个字节，超过的全部丢弃。
-        // 主要就是为base64 做处理。3 的倍数是刚刚好。
-        byte[] bytes = new byte[6];
-        for (int i = 0; i < 6; i++) {
-            bytes[i] = (byte) (id >> i);
+        String[] uuids = nextUuids(1);
+        return uuids[0];
+    }
+
+    @NonNull
+    public String[] nextUuids(int n) {
+        long id = nextIds(n);
+
+        String[] uuids = new String[n];
+        for (int i = 0; i < n; i++) {
+            // 一个id 的有效存储范围固定为6 个字节，超过的全部丢弃。
+            // 主要就是为base64 做处理。3 的倍数是刚刚好。
+            byte[] bytes = new byte[6];
+            for (int j = 0; j < 6; j++) {
+                bytes[j] = (byte) (id >> j);
+            }
+            uuids[i] = Base64.getEncoder().encodeToString(bytes);
         }
 
-        return Base64.getEncoder().encodeToString(bytes);
+        return uuids;
     }
 
     public long nextId() {
@@ -88,7 +99,6 @@ public class SuyhIdGenerator implements IdentifierGenerator {
     }
 
     /**
-     *
      * @param n 希望获得id 的数量
      * @return 返回第一个可用的id，该id + n 则为最后一个可用id
      */
