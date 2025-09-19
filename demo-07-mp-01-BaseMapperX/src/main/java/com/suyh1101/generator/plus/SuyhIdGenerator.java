@@ -40,7 +40,7 @@ public class SuyhIdGenerator implements IdentifierGenerator {
         System.out.println("Start timestamp (UTC): 0x" + Long.toHexString(startMs));
         System.out.println("Start timestamp (UTC): " + startMs);
 
-        long relativeMs = System.currentTimeMillis() - startMs;
+        long relativeMs = currentMs() - startMs;
 
         // 当前时间戳相对于 20250101(UTC 时区时间)
         // (initMs >> 10 + 1): 将最低10 位清0，并+ 1，使得初始值为当前时间未来的 1024 毫秒时间里面的，而不是已经过去的时间
@@ -51,6 +51,10 @@ public class SuyhIdGenerator implements IdentifierGenerator {
         lastId = ((relativeMs >> 10) + 1) << (10 + 8);
 
         this.uuidOrdered = uuidOrdered;
+    }
+
+    public static long currentMs() {
+        return System.currentTimeMillis();
     }
 
     @Override
@@ -151,7 +155,7 @@ public class SuyhIdGenerator implements IdentifierGenerator {
      * @return 返回第一个可用的id，该id + n 则为最后一个可用id
      */
     public synchronized Long obtainStartId(int n) {
-        long curMs = System.currentTimeMillis();
+        long curMs = currentMs();
         long maxId = maxId(curMs);
         long expectMaxId = lastId + n;
         if (expectMaxId > maxId) {
