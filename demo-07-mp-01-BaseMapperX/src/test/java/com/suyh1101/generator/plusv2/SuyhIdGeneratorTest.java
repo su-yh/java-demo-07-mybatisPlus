@@ -96,9 +96,10 @@ public class SuyhIdGeneratorTest {
 
         Set<String> idSet = new HashSet<>();
         for (int i = 0; i < 100; i++) {
+            System.out.println("i: " + i);
             String[] ids = idGenerator.nextUuids(n);
             for (String uuid : ids) {
-                System.out.println("uuid: " + uuid);
+                // System.out.println("uuid: " + uuid);
                 boolean res = idSet.add(uuid);
                 Assertions.assertTrue(res);
             }
