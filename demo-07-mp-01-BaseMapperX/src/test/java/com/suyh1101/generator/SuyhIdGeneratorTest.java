@@ -2,12 +2,15 @@ package com.suyh1101.generator;
 
 
 import com.suyh1101.generator.plus.SuyhIdGenerator;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.util.StopWatch;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 public class SuyhIdGeneratorTest {
     @Test
@@ -81,6 +84,23 @@ public class SuyhIdGeneratorTest {
             stopWatch.stop();
         }
         System.out.println(stopWatch.prettyPrint());
+    }
+
+    @Test
+    public void testUniqueUuids() {
+        SuyhIdGenerator idGenerator = new SuyhIdGenerator();
+        int n = SuyhIdGenerator.MAX_SEQUENCE;
+        n = 1;
+
+        Set<String> idSet = new HashSet<>();
+        for (int i = 0; i < 100; i++) {
+            String[] ids = idGenerator.nextUuids(n);
+            for (String uuid : ids) {
+                System.out.println("uuid: " + uuid);
+                boolean res = idSet.add(uuid);
+                Assertions.assertTrue(res);
+            }
+        }
     }
 
 }
