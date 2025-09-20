@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Base64;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -17,6 +18,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Component
 public class SuyhIdGenerator implements IdentifierGenerator {
+    public static final Random RANDOM = new Random();
     // 一个时间单位内允许生成的ID数量（18位二进制）
     public static final int MAX_SEQUENCE = 1 << 18;
 
@@ -27,16 +29,17 @@ public class SuyhIdGenerator implements IdentifierGenerator {
     protected final long startMs;
 
     // 是否生成有序UUID
-    protected final boolean uuidOrdered;
+    protected final UuidModeEnums uuidMode;
 
     // 复用的字节数组（仅在同步方法内使用）
     private static final byte[] BYTES = new byte[6];
     // 复用的位存储数组（仅在同步方法内使用）
-    private static final boolean[] BITS = new boolean[48];
+    private static final boolean[] BITS_48 = new boolean[48];
+    private static final boolean[] BITS_72 = new boolean[72];
 
     // 固定乱序映射规则（0~47表示原始位索引，值表示新位置）
     // 注意：需确保包含0~47每个数字恰好一次
-    private static final int[] SHUFFLE_RULE = {
+    private static final int[] SHUFFLE_RULE_48bit = {
             23, 10, 45, 3, 37, 18,
             7, 41, 14, 29, 0, 32,
             46, 19, 25, 8, 34, 12,
@@ -47,11 +50,28 @@ public class SuyhIdGenerator implements IdentifierGenerator {
             47, 13, 36, 21, 43, 26
     };
 
+    // 固定乱序映射规则（0~71表示原始位索引，值表示新位置）
+    // 注意：需确保包含0~71每个数字恰好一次
+    private static final int[] SHUFFLE_RULE_72bit = {
+            35, 68, 26, 45, 12, 55,
+            18, 29, 40, 64, 24, 39,
+            15, 50, 62, 36, 57, 10,
+            49, 2, 31, 60, 44, 21,
+            5, 14, 47, 65, 34, 23,
+            70, 41, 19, 69, 59, 20,
+            3, 63, 51, 33, 7, 25,
+            42, 1, 53, 37, 0, 66,
+            11, 54, 30, 48, 6, 27,
+            58, 4, 16, 32, 67, 13,
+            28, 43, 9, 71, 56, 38,
+            8, 52, 22, 61, 17, 46
+    };
+
     public SuyhIdGenerator() {
-        this(false);
+        this(UuidModeEnums.ORDERED_NORMAL);
     }
 
-    public SuyhIdGenerator(boolean uuidOrdered) {
+    public SuyhIdGenerator(UuidModeEnums uuidMode) {
         // 这个值是可以修改的，但是一个工程应该只在首次使用的时候指定，后面就只能固定该值了。
         LocalDate localDate = LocalDate.of(2025, 1, 1);
         ZonedDateTime zonedDateTime = localDate.atStartOfDay(ZoneId.of("UTC"));
@@ -68,7 +88,7 @@ public class SuyhIdGenerator implements IdentifierGenerator {
         // 初始化lastId到当前时间的下一个时间单位（1024ms）
         this.lastId = ((relativeMs >> 10) + 1) << (10 + 8);
 
-        this.uuidOrdered = uuidOrdered;
+        this.uuidMode = uuidMode;
 
         // 验证乱序规则的有效性
         validateShuffleRule();
@@ -88,10 +108,15 @@ public class SuyhIdGenerator implements IdentifierGenerator {
 
     // 验证乱序规则是否包含0~47所有数字
     private void validateShuffleRule() {
-        boolean[] seen = new boolean[48];
-        for (int index : SHUFFLE_RULE) {
-            if (index < 0 || index >= 48 || seen[index]) {
-                throw new IllegalArgumentException("Invalid SHUFFLE_RULE: 包含重复或越界的索引");
+        validateShuffleRule(SHUFFLE_RULE_48bit, SHUFFLE_RULE_48bit.length);
+        validateShuffleRule(SHUFFLE_RULE_72bit, SHUFFLE_RULE_72bit.length);
+    }
+
+    private void validateShuffleRule(int[] shuffleRule, int size) {
+        boolean[] seen = new boolean[size];
+        for (int index : shuffleRule) {
+            if (index < 0 || index >= size || seen[index]) {
+                throw new IllegalArgumentException("Invalid SHUFFLE_RULE: 包含重复或越界的索引, size: " + size);
             }
             seen[index] = true;
         }
@@ -116,8 +141,21 @@ public class SuyhIdGenerator implements IdentifierGenerator {
 
         for (int i = 0; i < n; i++) {
             long id = startId + i;
-            long curId = this.uuidOrdered ? id : shuffleLow48Bits(id);
-            uuids[i] = convertUuid(curId);
+            switch (uuidMode) {
+                case ORDERED_NORMAL:
+                    uuids[i] = convertUuid(id);
+                    break;
+                case UNORDERED_NORMAL:
+                    long curId = shuffleLow48Bits(id);
+                    uuids[i] = convertUuid(curId);
+                    break;
+                case UNORDERED_PLUS:
+                    byte[] ubs = shuffle72Bits(id);
+                    uuids[i] = Base64.getEncoder().encodeToString(ubs);
+                    break;
+                default:
+                    break;
+            }
         }
 
         return uuids;
@@ -160,15 +198,51 @@ public class SuyhIdGenerator implements IdentifierGenerator {
     protected long shuffleLow48Bits(long id) {
         // 每一位都存储为boolean 值
         for (int i = 0; i < 48; i++) {
-            BITS[i] = (id & (1L << i)) != 0;
+            BITS_48[i] = (id & (1L << i)) != 0;
         }
 
         // 按规则重排
         long shuffled = 0;
         for (int i = 0; i < 48; i++) {
-            int originalIndex = SHUFFLE_RULE[i];
-            if (BITS[originalIndex]) {
+            int originalIndex = SHUFFLE_RULE_48bit[i];
+            if (BITS_48[originalIndex]) {
                 shuffled |= (1L << i);
+            }
+        }
+
+        return shuffled;
+    }
+
+    /**
+     * 随机一个 int
+     * 取id 的低48 位 和 随机值的 低24 位 乱序生成一个新的 9 字节数据
+     * @param id 原始id 值
+     * @return 乱序后的字节数组
+     */
+    protected byte[] shuffle72Bits(long id) {
+        int indOffset = 0;
+        // 每一位都存储为boolean 值
+        // id 的低48 位存放在前48 个索引位置
+        for (int i = 0; i < 48; i++) {
+            BITS_72[indOffset + i] = (id & (1L << i)) != 0;
+        }
+
+        // 随机值的低24 位存放在后面的24 个索引位置
+        int randValue = RANDOM.nextInt();
+        indOffset = 48;
+        for (int i = 0; i < 24; i++) {
+            BITS_72[indOffset + i] = (randValue & (1L << i)) != 0;
+        }
+
+        // 按规则重排
+        byte[] shuffled = new byte[9];
+        for (int i = 0; i < 9; i++) {
+            for (int j = 0; j < 8; j++) {
+                int ind = i * 8 + j;    // 数组下标位置
+                int originalIndex = SHUFFLE_RULE_72bit[ind];
+                if (BITS_72[originalIndex]) {
+                    shuffled[i] |= (byte) (1L << j);
+                }
             }
         }
 
