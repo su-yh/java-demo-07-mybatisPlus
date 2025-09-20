@@ -65,7 +65,7 @@ public class SuyhIdGeneratorTest {
     @Test
     public void testIds() {
         int n = SuyhIdGenerator.MAX_SEQUENCE;
-        SuyhIdGenerator idGenerator = new SuyhIdGenerator(UuidModeEnums.UNORDERED_PLUS);
+        SuyhIdGenerator idGenerator = new SuyhIdGenerator();
         StopWatch stopWatch = new StopWatch();
         for (int i = 0; i < 10; i++) {
             stopWatch.start("i-" + i);

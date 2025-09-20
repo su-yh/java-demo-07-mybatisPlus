@@ -75,7 +75,7 @@ public class SuyhIdGenerator implements IdentifierGenerator {
         ZonedDateTime zonedDateTime = localDate.atStartOfDay(ZoneId.of("UTC"));
         this.startMs = zonedDateTime.toInstant().toEpochMilli();
 
-        long relativeMs = initSystemMs() - startMs;
+        long relativeMs = System.currentTimeMillis() - startMs;
 
         // 当前时间戳相对于 20250101(UTC 时区时间)
         // (initMs >> 10 + 1): 将最低10 位清0，并+ 1，使得初始值为当前时间未来的 1024 毫秒时间里面的，而不是已经过去的时间
@@ -92,19 +92,19 @@ public class SuyhIdGenerator implements IdentifierGenerator {
         validateShuffleRule();
     }
 
-    // 调试用的时间戳控制
-    public static Long DEBUG_INIT = null;
-    public static Long DEBUG_CURR = null;
+    // // 调试用的时间戳控制
+    // public static Long DEBUG_INIT = null;
+    // public static Long DEBUG_CURR = null;
+    //
+    // private static long initSystemMs() {
+    //     return DEBUG_INIT != null ? DEBUG_INIT : System.currentTimeMillis();
+    // }
+    //
+    // private static long currentMs() {
+    //     return DEBUG_CURR != null ? DEBUG_CURR : System.currentTimeMillis();
+    // }
 
-    private static long initSystemMs() {
-        return DEBUG_INIT != null ? DEBUG_INIT : System.currentTimeMillis();
-    }
-
-    private static long currentMs() {
-        return DEBUG_CURR != null ? DEBUG_CURR : System.currentTimeMillis();
-    }
-
-    // 验证乱序规则是否包含0~47所有数字
+    // 验证乱序规则是否包含0~47所有数字，每个数字必须出现并且只出现一次
     private void validateShuffleRule() {
         validateShuffleRule(SHUFFLE_RULE_48bit, SHUFFLE_RULE_48bit.length);
         validateShuffleRule(SHUFFLE_RULE_72bit, SHUFFLE_RULE_72bit.length);
@@ -253,7 +253,7 @@ public class SuyhIdGenerator implements IdentifierGenerator {
      * @return 起始ID，若当前时间单位不足则返回null
      */
     protected Long allocateIds(int n) {
-        long curMs = currentMs();
+        long curMs = System.currentTimeMillis();
         long maxId = maxId(curMs);
         long expectMaxId = lastId + n;
 
