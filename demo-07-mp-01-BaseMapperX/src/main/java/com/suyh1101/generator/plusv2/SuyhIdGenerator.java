@@ -2,7 +2,6 @@ package com.suyh1101.generator.plusv2;
 
 import com.baomidou.mybatisplus.core.incrementer.IdentifierGenerator;
 import org.springframework.lang.NonNull;
-import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -16,7 +15,6 @@ import java.util.concurrent.TimeUnit;
  * 其中18 位用来存储增量值，30 位用来存储时间，在这30 位里面，每一位表示1024 ms ，所以最大可使用约：34.86 年
  * 从 2025-01-01 开始计算，这套 ID 系统可以使用到大约 2059 年（具体是 2025 + 34.86 ≈ 2059 年底）
  */
-@Component
 public class SuyhIdGenerator implements IdentifierGenerator {
     public static final Random RANDOM = new Random();
     // 一个时间单位内允许生成的ID数量（18位二进制）

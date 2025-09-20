@@ -1,7 +1,6 @@
-package com.suyh1101.generator;
+package com.suyh1101.generator.plusv2;
 
 
-import com.suyh1101.generator.plus.SuyhIdGenerator;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.util.StopWatch;
@@ -12,6 +11,10 @@ import java.time.ZonedDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * @author suyh
+ * @since 2025-09-20
+ */
 public class SuyhIdGeneratorTest {
     @Test
     public void testZoneDateTime() {
@@ -62,7 +65,7 @@ public class SuyhIdGeneratorTest {
     @Test
     public void testIds() {
         int n = SuyhIdGenerator.MAX_SEQUENCE;
-        SuyhIdGenerator idGenerator = new SuyhIdGenerator();
+        SuyhIdGenerator idGenerator = new SuyhIdGenerator(UuidModeEnums.UNORDERED_PLUS);
         StopWatch stopWatch = new StopWatch();
         for (int i = 0; i < 10; i++) {
             stopWatch.start("i-" + i);
@@ -75,7 +78,7 @@ public class SuyhIdGeneratorTest {
 
     @Test
     public void testUuids() {
-        SuyhIdGenerator idGenerator = new SuyhIdGenerator();
+        SuyhIdGenerator idGenerator = new SuyhIdGenerator(UuidModeEnums.UNORDERED_PLUS);
         StopWatch stopWatch = new StopWatch();
         for (int i = 0; i < 100; i++) {
             stopWatch.start("i-" + i);
@@ -88,7 +91,7 @@ public class SuyhIdGeneratorTest {
 
     @Test
     public void testUniqueUuids() {
-        SuyhIdGenerator idGenerator = new SuyhIdGenerator();
+        SuyhIdGenerator idGenerator = new SuyhIdGenerator(UuidModeEnums.UNORDERED_PLUS);
         int n = SuyhIdGenerator.MAX_SEQUENCE;
 
         Set<String> idSet = new HashSet<>();
@@ -101,5 +104,4 @@ public class SuyhIdGeneratorTest {
             }
         }
     }
-
 }

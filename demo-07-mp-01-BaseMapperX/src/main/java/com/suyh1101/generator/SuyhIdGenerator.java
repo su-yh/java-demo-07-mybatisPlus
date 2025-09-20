@@ -18,6 +18,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * @since 2023-12-09
  */
 @Component
+@Deprecated
 public class SuyhIdGenerator implements IdentifierGenerator {
     // 最好是每隔一段时间，就重新生成。
     // 在1 毫秒内最大生成的值是2 ^ 12
