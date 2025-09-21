@@ -206,6 +206,45 @@ public class SuyhIdGenerator implements IdentifierGenerator {
         return msPart | (MAX_SEQUENCE - 1);
     }
 
+    /**
+     * 这是提供给定时调度任务调用的，每11 秒（包含10 个时间单位）调用一次
+     * <p>
+     * 每过一段时间（10 个 时间单位），对id 的时间部分做重置在10 个时间单位前。
+     * 让id 不要总是只+1
+     * 当前方法不做加锁处理，加锁在方法{@link #doResetRelativeMs(long)} 中处理
+     * <p>
+     * 为什么要定时调整，这是因为一个服务器运行时间会很长，在这段时间里面如果ID 总是自增，会不太好。
+     * 尽量让其乱序一点，而保留自增是简化逻辑，使得一次批量获取id 时变得简单。
+     * 同时使得连续的ID 不会太多。
+     * 一般在10 个时间单位里面连续并没有太大问题，在实际的项目中ID 的生成并不会那么频繁。
+     * 这样也比较符合实际情况。
+     */
+    public void resetRelativeMs() {
+        long curMs = System.currentTimeMillis();
+        long relativeMs = curMs - startMs;
+        if (relativeMs <= 0) {
+            return;
+        }
+
+        // 时间单位：1024ms（2^10），左移18位给序列号留出空间
+        // 这里的 -10 达到往前推 10 个时间单位的效果
+        long msPart = ((relativeMs >> 10) - 10) << 18;
+        if (msPart <= 0) {
+            return;
+        }
+        // 当10个时间单位前的时间点晚于lastId时，才执行重置
+        if (msPart <= lastId) {
+            return;
+        }
+
+        doResetRelativeMs(msPart);
+    }
+
+    protected synchronized void doResetRelativeMs(long msPart) {
+        // 取时间部分，以及保留lastId 的容量部分
+        lastId = msPart | (lastId & (MAX_SEQUENCE - 1));
+    }
+
     @Override
     public String nextUUID(Object entity) {
         return nextUuid();
