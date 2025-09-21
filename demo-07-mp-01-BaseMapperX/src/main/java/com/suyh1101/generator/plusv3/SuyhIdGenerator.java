@@ -1,4 +1,4 @@
-package com.suyh1101.generator.plusv2;
+package com.suyh1101.generator.plusv3;
 
 import com.baomidou.mybatisplus.core.incrementer.IdentifierGenerator;
 import com.suyh1101.generator.UuidModeEnums;

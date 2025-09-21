@@ -1,4 +1,4 @@
-package com.suyh1101.generator.plusv2;
+package com.suyh1101.generator;
 
 /**
  * @author suyh

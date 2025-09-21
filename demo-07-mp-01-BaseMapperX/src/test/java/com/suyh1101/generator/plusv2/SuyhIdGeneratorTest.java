@@ -1,6 +1,7 @@
 package com.suyh1101.generator.plusv2;
 
 
+import com.suyh1101.generator.UuidModeEnums;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.util.StopWatch;
