@@ -1,7 +1,6 @@
 package com.suyh1101.generator.plusv3;
 
 import com.baomidou.mybatisplus.core.incrementer.IdentifierGenerator;
-import com.suyh1101.generator.UuidModeEnums;
 import org.springframework.lang.NonNull;
 
 import java.time.LocalDate;
@@ -12,9 +11,10 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 这里使用 6 个字节来存储ID 值
- * 其中18 位用来存储增量值，30 位用来存储时间，在这30 位里面，每一位表示1024 ms ，所以最大可使用约：34.86 年
- * 从 2025-01-01 开始计算，这套 ID 系统可以使用到大约 2059 年（具体是 2025 + 34.86 ≈ 2059 年底）
+ * 这里使用7 个字节来存储ID 值
+ * 其中18 位用来存储增量值，剩下的38 位用来存储时间，在这些位里面，每一位表示1024 ms ，所以最大可使用约：8,925 年
+ * 生成uuid 时，会随便生成一个数字，然后取低两字节与这7 个字节的数据组合，进行二进制位重新洗牌，生成一个新的9 字节数组，
+ * 最后使用这个9 字节数据使用base64 编码生成一个12 个字节的uuid
  */
 public class SuyhIdGenerator implements IdentifierGenerator {
     public static final Random RANDOM = new Random();
@@ -27,27 +27,13 @@ public class SuyhIdGenerator implements IdentifierGenerator {
     // 起始时间戳（UTC 2025-01-01）
     protected final long startMs;
 
-    // 是否生成有序UUID
-    protected final UuidModeEnums uuidMode;
-
-    // 复用的字节数组（仅在同步方法内使用）
-    private static final byte[] BYTES = new byte[6];
+    // id 的有效字节为7 个字节
+    private static final int ID_BYTES = 7;
+    // uuid 占用9 个字节
+    private static final int UUID_BYTES = 9;
     // 复用的位存储数组（仅在同步方法内使用）
-    private static final boolean[] BITS_48 = new boolean[48];
-    private static final boolean[] BITS_72 = new boolean[72];
-
-    // 固定乱序映射规则（0~47表示原始位索引，值表示新位置）
-    // 注意：需确保包含0~47每个数字恰好一次
-    private static final int[] SHUFFLE_RULE_48bit = {
-            23, 10, 45, 3, 37, 18,
-            7, 41, 14, 29, 0, 32,
-            46, 19, 25, 8, 34, 12,
-            30, 4, 27, 16, 42, 39,
-            11, 22, 38, 5, 20, 44,
-            33, 1, 9, 2, 40, 15,
-            28, 6, 31, 17, 24, 35,
-            47, 13, 36, 21, 43, 26
-    };
+    // uuid 的二进制位数据存储
+    private static final boolean[] BITS_72 = new boolean[UUID_BYTES * Byte.SIZE];
 
     // 固定乱序映射规则（0~71表示原始位索引，值表示新位置）
     // 注意：需确保包含0~71每个数字恰好一次
@@ -67,10 +53,6 @@ public class SuyhIdGenerator implements IdentifierGenerator {
     };
 
     public SuyhIdGenerator() {
-        this(UuidModeEnums.ORDERED_NORMAL);
-    }
-
-    public SuyhIdGenerator(UuidModeEnums uuidMode) {
         // 这个值是可以修改的，但是一个工程应该只在首次使用的时候指定，后面就只能固定该值了。
         LocalDate localDate = LocalDate.of(2025, 1, 1);
         ZonedDateTime zonedDateTime = localDate.atStartOfDay(ZoneId.of("UTC"));
@@ -87,27 +69,12 @@ public class SuyhIdGenerator implements IdentifierGenerator {
         // 初始化lastId到当前时间的下一个时间单位（1024ms）
         this.lastId = ((relativeMs >> 10) + 1) << (10 + 8);
 
-        this.uuidMode = uuidMode;
-
         // 验证乱序规则的有效性
         validateShuffleRule();
     }
 
-    // // 调试用的时间戳控制
-    // public static Long DEBUG_INIT = null;
-    // public static Long DEBUG_CURR = null;
-    //
-    // private static long initSystemMs() {
-    //     return DEBUG_INIT != null ? DEBUG_INIT : System.currentTimeMillis();
-    // }
-    //
-    // private static long currentMs() {
-    //     return DEBUG_CURR != null ? DEBUG_CURR : System.currentTimeMillis();
-    // }
-
     // 验证乱序规则是否包含0~47所有数字，每个数字必须出现并且只出现一次
     private void validateShuffleRule() {
-        validateShuffleRule(SHUFFLE_RULE_48bit, SHUFFLE_RULE_48bit.length);
         validateShuffleRule(SHUFFLE_RULE_72bit, SHUFFLE_RULE_72bit.length);
     }
 
@@ -140,21 +107,8 @@ public class SuyhIdGenerator implements IdentifierGenerator {
 
         for (int i = 0; i < n; i++) {
             long id = startId + i;
-            switch (uuidMode) {
-                case ORDERED_NORMAL:
-                    uuids[i] = convertUuid(id);
-                    break;
-                case UNORDERED_NORMAL:
-                    long curId = shuffleLow48Bits(id);
-                    uuids[i] = convertUuid(curId);
-                    break;
-                case UNORDERED_PLUS:
-                    byte[] ubs = shuffle72Bits(id);
-                    uuids[i] = Base64.getEncoder().encodeToString(ubs);
-                    break;
-                default:
-                    break;
-            }
+            byte[] ubs = shuffle72Bits(id);
+            uuids[i] = Base64.getEncoder().encodeToString(ubs);
         }
 
         return uuids;
@@ -185,33 +139,6 @@ public class SuyhIdGenerator implements IdentifierGenerator {
         }
     }
 
-    // 转换ID为Base64编码（复用BYTES数组）
-    protected String convertUuid(long id) {
-        for (int j = 0; j < 6; j++) {
-            BYTES[j] = (byte) (id >> (j * 8));
-        }
-        return Base64.getEncoder().encodeToString(BYTES);
-    }
-
-    // 对低48位进行乱序重排（复用BITS数组）
-    protected long shuffleLow48Bits(long id) {
-        // 每一位都存储为boolean 值
-        for (int i = 0; i < 48; i++) {
-            BITS_48[i] = (id & (1L << i)) != 0;
-        }
-
-        // 按规则重排
-        long shuffled = 0;
-        for (int i = 0; i < 48; i++) {
-            int originalIndex = SHUFFLE_RULE_48bit[i];
-            if (BITS_48[originalIndex]) {
-                shuffled |= (1L << i);
-            }
-        }
-
-        return shuffled;
-    }
-
     /**
      * 随机一个 int
      * 取id 的低48 位 和 随机值的 低24 位 乱序生成一个新的 9 字节数据
@@ -221,26 +148,26 @@ public class SuyhIdGenerator implements IdentifierGenerator {
     protected byte[] shuffle72Bits(long id) {
         int indOffset = 0;
         // 每一位都存储为boolean 值
-        // id 的低48 位存放在前48 个索引位置
-        for (int i = 0; i < 48; i++) {
+        // id 的有效二进制位数据放在前面的数组位置
+        for (int i = 0; i < ID_BYTES * Byte.SIZE; i++) {
             BITS_72[indOffset + i] = (id & (1L << i)) != 0;
         }
 
-        // 随机值的低24 位存放在后面的24 个索引位置
+        // 随机值的低位，用来补充剩下的空位以达到 UUID_BYTES 个字节的数据
         int randValue = RANDOM.nextInt();
-        indOffset = 48;
-        for (int i = 0; i < 24; i++) {
-            BITS_72[indOffset + i] = (randValue & (1L << i)) != 0;
+        indOffset = ID_BYTES * Byte.SIZE;
+        for (int i = 0; i < (UUID_BYTES - ID_BYTES) * Byte.SIZE; i++) {
+            BITS_72[indOffset + i] = (randValue & (1 << i)) != 0;
         }
 
         // 按规则重排
-        byte[] shuffled = new byte[9];
-        for (int i = 0; i < 9; i++) {
-            for (int j = 0; j < 8; j++) {
-                int ind = i * 8 + j;    // 数组下标位置
+        byte[] shuffled = new byte[UUID_BYTES];
+        for (int i = 0; i < UUID_BYTES; i++) {
+            for (int j = 0; j < Byte.SIZE; j++) {
+                int ind = i * Byte.SIZE + j;    // 数组下标位置
                 int originalIndex = SHUFFLE_RULE_72bit[ind];
                 if (BITS_72[originalIndex]) {
-                    shuffled[i] |= (byte) (1L << j);
+                    shuffled[i] |= (byte) (1 << j);
                 }
             }
         }
