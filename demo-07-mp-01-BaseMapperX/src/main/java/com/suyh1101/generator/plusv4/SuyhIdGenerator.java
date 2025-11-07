@@ -54,7 +54,10 @@ public class SuyhIdGenerator implements IdentifierGenerator {
 
     public SuyhIdGenerator() {
         // 这个值是可以修改的，但是一个工程应该只在首次使用的时候指定，后面就只能固定该值了。
-        LocalDate localDate = LocalDate.of(2025, 1, 1);
+        this(LocalDate.of(2025, 1, 1));
+    }
+
+    public SuyhIdGenerator(LocalDate localDate) {
         ZonedDateTime zonedDateTime = localDate.atStartOfDay(ZoneId.of("UTC"));
         this.startMs = zonedDateTime.toInstant().toEpochMilli();
 
