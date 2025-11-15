@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class SuyhIdGenerator {
     public static final Random RANDOM = new Random();
-    public static final Base32 B32 = new Base32(0, null, false, (byte) 0);
+    public static final Base32 B32 = new Base32(false);
     // 一个时间单位内允许生成的ID数量（18位二进制）
     public static final int MAX_SEQUENCE = 1 << 18;
 
@@ -104,7 +104,7 @@ public class SuyhIdGenerator {
         for (int i = 0; i < n; i++) {
             long id = startId + i;
             byte[] ubs = shuffle ? shuffle56Bits(id) : mapping56Bits(id);
-            uuids[i] = B32.encodeToString(ubs);
+            uuids[i] = B32.encodeToString(ubs).replace("=", "");
         }
 
         return uuids;
