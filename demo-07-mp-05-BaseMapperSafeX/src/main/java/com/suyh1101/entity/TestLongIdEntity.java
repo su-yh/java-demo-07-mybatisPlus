@@ -5,7 +5,6 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.Version;
-import com.suyh1101.mybatis.safe.BaseMapperSafeX;
 import com.suyh1101.mybatis.safe.BaseSafeUpdate;
 import lombok.Data;
 
@@ -16,8 +15,8 @@ import lombok.Data;
 @TableName(value = "test_long_id", autoResultMap = true)
 @Data
 public class TestLongIdEntity implements BaseSafeUpdate {
-    @TableId(type = IdType.AUTO)
-    private Long id;
+    @TableId(value = "id", type = IdType.ASSIGN_ID)
+    private Long uuid;
 
     private String nickName;
 

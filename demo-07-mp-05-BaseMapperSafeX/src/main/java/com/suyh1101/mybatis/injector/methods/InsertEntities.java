@@ -3,15 +3,17 @@ package com.suyh1101.mybatis.injector.methods;
 import com.baomidou.mybatisplus.core.injector.AbstractMethod;
 import com.baomidou.mybatisplus.core.metadata.TableFieldInfo;
 import com.baomidou.mybatisplus.core.metadata.TableInfo;
-import com.baomidou.mybatisplus.core.toolkit.StringPool;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.core.toolkit.sql.SqlScriptUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.executor.keygen.NoKeyGenerator;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.mapping.SqlSource;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
+@Slf4j
 public class InsertEntities extends AbstractMethod {
     // SqlMethod
     private static final String METHOD = "insertEntities";
@@ -24,17 +26,40 @@ public class InsertEntities extends AbstractMethod {
 
     @Override
     public MappedStatement injectMappedStatement(Class<?> mapperClass, Class<?> modelClass, TableInfo tableInfo) {
-        // 2. 构建字段部分：(id, nick_name, age)（复用框架逻辑，排除自增主键）
-        List<TableFieldInfo> insertFields = tableInfo.getFieldList();   // 这个方法直接不会包含主键ID 列
-        String columnSql = insertFields.stream()
-                .map(TableFieldInfo::getColumn)
-                .collect(Collectors.joining(StringPool.COMMA, LEFT_BRACKET, RIGHT_BRACKET));
+        boolean includeKeyColumn = keyColumn(tableInfo);
+        tableInfo.getKeyColumn();
+        tableInfo.getKeyProperty();
 
-        // 3. 构建单组值脚本：(#{item.id}, #{item.nickName}, #{item.age})
-        // 关键：直接生成 #{property}，不添加 if test="null" 判断
-        String singleValueScript = insertFields.stream()
-                .map(field -> "#{item." + field.getProperty() + "}") // item 是 foreach 的循环变量
-                .collect(Collectors.joining(StringPool.COMMA, LEFT_BRACKET, RIGHT_BRACKET));
+        // 2. 构建字段部分：(id, nick_name, age)（复用框架逻辑，排除自增主键）
+        // List<TableFieldInfo> insertFields = tableInfo.getFieldList();   // 这个方法直接不会包含主键ID 列
+        // String columnSql = insertFields.stream()
+        //         .map(TableFieldInfo::getColumn)
+        //         .collect(Collectors.joining(COMMA, LEFT_BRACKET, RIGHT_BRACKET));
+        //
+        // // 3. 构建单组值脚本：(#{item.id}, #{item.nickName}, #{item.age})
+        // // 关键：直接生成 #{property}，不添加 if test="null" 判断
+        // String singleValueScript = insertFields.stream()
+        //         .map(field -> "#{item." + field.getProperty() + "}")
+        //         .collect(Collectors.joining(COMMA, LEFT_BRACKET, RIGHT_BRACKET));
+
+        List<String> columns = new ArrayList<>();
+        List<String> properties = new ArrayList<>();
+
+        if (includeKeyColumn) {
+            columns.add(tableInfo.getKeyColumn());
+            // item 是 foreach 的循环变量
+            properties.add("#{item." + tableInfo.getKeyProperty() + "}");
+        }
+
+        List<TableFieldInfo> insertFields = tableInfo.getFieldList();   // 这个方法直接不会包含主键ID 列
+        for (TableFieldInfo fieldInfo : insertFields) {
+            columns.add(fieldInfo.getColumn());
+            // item 是 foreach 的循环变量
+            properties.add("#{item." + fieldInfo.getProperty() + "}");
+        }
+
+        String columnSql = LEFT_BRACKET + String.join(COMMA, columns) + RIGHT_BRACKET;
+        String singleValueScript = LEFT_BRACKET + String.join(COMMA, properties) + RIGHT_BRACKET;
 
         // 4. 构建多组值脚本：用 <foreach> 循环列表，拼接多组 ()，并用逗号分隔
         // foreach 属性说明：
@@ -46,7 +71,7 @@ public class InsertEntities extends AbstractMethod {
                 "list", // 集合参数名（方法参数是 List，所以用 list）
                 null,  // 索引变量名设为 index（与循环变量名区分）
                 "item", // 循环变量名
-                StringPool.COMMA // 组之间的分隔符
+                COMMA // 组之间的分隔符
         );
 
         // 5. 最终 SQL 脚本（拼接字段和多组值）
@@ -58,7 +83,7 @@ public class InsertEntities extends AbstractMethod {
         );
 
         // 6. 打印生成的 SQL 脚本（可选，用于调试）
-        System.out.println("生成的批量插入 SQL：" + sql);
+        log.debug("生成的批量插入 SQL：" + sql);
 
         // 7. 构建 SqlSource 并注册 MappedStatement
         SqlSource sqlSource = languageDriver.createSqlSource(configuration, sql, List.class);
@@ -66,5 +91,11 @@ public class InsertEntities extends AbstractMethod {
                 mapperClass, modelClass, super.methodName, sqlSource,
                 NoKeyGenerator.INSTANCE, null, null
         );
+    }
+
+    private boolean keyColumn(TableInfo tableInfo) {
+        // suyh - 这里借助这个方法，若返回非空，则表示主键列需要加入进来，否则不需要主键列。
+        String c = tableInfo.getKeyInsertSqlColumn(true, null, false);
+        return StringUtils.isNotBlank(c);
     }
 }

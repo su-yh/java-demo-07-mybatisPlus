@@ -29,14 +29,23 @@ public class InsertEntitiesTest {
 
     @Test
     public void testInsert() {
-        TestLongIdEntity insertEntity = new TestLongIdEntity();
-        insertEntity.setNickName("nickName");
-        insertEntity.setAge(10);
-        insertEntity.setSafeVersion(1);
+
 
         List<TestLongIdEntity> entities = new ArrayList<>();
-        entities.add(insertEntity);
-        entities.add(insertEntity);
+        {
+            TestLongIdEntity insertEntity = new TestLongIdEntity();
+            insertEntity.setNickName("nickName");
+            insertEntity.setAge(10);
+            insertEntity.setSafeVersion(1);
+            entities.add(insertEntity);
+        }
+        {
+            TestLongIdEntity insertEntity = new TestLongIdEntity();
+            insertEntity.setNickName("nickName");
+            insertEntity.setAge(10);
+            insertEntity.setSafeVersion(1);
+            entities.add(insertEntity);
+        }
 
         testLongIdMapper.insertEntities(entities);
     }

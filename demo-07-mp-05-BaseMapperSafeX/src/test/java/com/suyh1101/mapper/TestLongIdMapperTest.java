@@ -5,7 +5,6 @@ import com.suyh1101.entity.TestLongIdEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.AssertionsKt;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -42,7 +41,7 @@ public class TestLongIdMapperTest {
         Assertions.assertNotNull(historyEntity);
 
         TestLongIdEntity updateEntity = new TestLongIdEntity();
-        updateEntity.setId(1L);
+        updateEntity.setUuid(1L);
         updateEntity.setAge(10);
         updateEntity.setSafeVersion(historyEntity.getSafeVersion());
 
