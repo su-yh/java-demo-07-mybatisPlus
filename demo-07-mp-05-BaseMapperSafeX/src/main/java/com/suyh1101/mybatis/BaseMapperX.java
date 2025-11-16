@@ -132,4 +132,45 @@ public interface BaseMapperX<T> extends BaseMapper<T> {
         Db.saveOrUpdateBatch(collection);
     }
 
+    // 批量插入要注意的是自增主键ID 不会回写。所以如果需要自增主键ID 的话，就不能使用该方法进行批量插入。
+    void insertEntities(Collection<T> entities);
+
+    default void insertEntitiesBatch(Collection<T> entities) {
+        insertEntitiesBatch(entities, null);
+    }
+
+    default void insertEntitiesBatch(Collection<T> entities, Integer batchSize) {
+        if (entities == null || entities.isEmpty()) {
+            return;
+        }
+
+        // insertEntities(entitiesBatch);
+        // 2. 批次大小适配（默认 1000，最小 1）
+        int actualBatchSize = batchSize == null || batchSize < 1 ? 1000 : batchSize;
+
+        // 3. 把 Collection 转为 List（方便按索引拆分）
+        List<T> entityList = new ArrayList<>(entities);
+
+        // 4. 分批循环插入
+        int totalSize = entityList.size();
+        // 循环次数 = 总数量 / 批次大小（向上取整）
+        int totalBatches = (totalSize + actualBatchSize - 1) / actualBatchSize;
+
+        for (int i = 0; i < totalBatches; i++) {
+            // 计算当前批次的起始索引和结束索引
+            int startIndex = i * actualBatchSize;
+            // 结束索引 = 最小（起始索引+批次大小，总数量），避免越界
+            int endIndex = Math.min(startIndex + actualBatchSize, totalSize);
+
+            // 拆分当前批次的集合
+            List<T> currentBatch = entityList.subList(startIndex, endIndex);
+
+            // 调用你的原有批量插入方法（若需要重试/异常处理，可在这里扩展）
+            insertEntities(currentBatch);
+
+            // 可选：打印批次日志（便于调试和监控）
+            System.out.printf("第 %d 批插入完成，批次大小：%d，累计插入：%d/%d%n",
+                    i + 1, currentBatch.size(), endIndex, totalSize);
+        }
+    }
 }

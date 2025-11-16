@@ -29,17 +29,8 @@ public class InsertEntitiesTest {
 
     @Test
     public void testInsert() {
-
-
         List<TestLongIdEntity> entities = new ArrayList<>();
-        {
-            TestLongIdEntity insertEntity = new TestLongIdEntity();
-            insertEntity.setNickName("nickName");
-            insertEntity.setAge(10);
-            insertEntity.setSafeVersion(1);
-            entities.add(insertEntity);
-        }
-        {
+        for (int i = 0; i < 2200; i++) {
             TestLongIdEntity insertEntity = new TestLongIdEntity();
             insertEntity.setNickName("nickName");
             insertEntity.setAge(10);
@@ -47,6 +38,7 @@ public class InsertEntitiesTest {
             entities.add(insertEntity);
         }
 
-        testLongIdMapper.insertEntities(entities);
+        testLongIdMapper.insertEntitiesBatch(entities, 1000);
     }
 }
+
