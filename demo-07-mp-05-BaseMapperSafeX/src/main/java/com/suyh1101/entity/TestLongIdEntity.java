@@ -15,7 +15,7 @@ import lombok.Data;
 @TableName(value = "test_long_id", autoResultMap = true)
 @Data
 public class TestLongIdEntity implements BaseSafeUpdate {
-    @TableId(value = "id", type = IdType.ASSIGN_ID)
+    @TableId(value = "id", type = IdType.AUTO)
     private Long uuid;
 
     private String nickName;

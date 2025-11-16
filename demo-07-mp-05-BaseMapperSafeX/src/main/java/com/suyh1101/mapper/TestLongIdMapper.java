@@ -12,5 +12,6 @@ import java.util.Collection;
  */
 @Mapper
 public interface TestLongIdMapper extends BaseMapperSafeX<TestLongIdEntity> {
+    // 批量插入要注意的是自增主键ID 不会回写。所以如果需要自增主键ID 的话，就不能使用该方法进行批量插入。
     int insertEntities(Collection<TestLongIdEntity> entities);
 }
