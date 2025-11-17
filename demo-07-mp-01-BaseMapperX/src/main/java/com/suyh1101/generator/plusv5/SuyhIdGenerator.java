@@ -6,7 +6,6 @@ import org.springframework.lang.NonNull;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 
@@ -15,8 +14,8 @@ import java.util.concurrent.TimeUnit;
  * 其中18 位用来存储增量值，剩下的38 位用来存储时间，在这些位里面，每一位表示1024 ms ，所以最大可使用约：8,925 年
  */
 public class SuyhIdGenerator {
-    public static final Random RANDOM = new Random();
-    public static final Base32 B32 = new Base32(false);
+    protected static final byte PAD_DEFAULT = '=';
+    public static final Base32 B32 = new Base32(0, null, false, PAD_DEFAULT);
     // 一个时间单位内允许生成的ID数量（18位二进制）
     public static final int MAX_SEQUENCE = 1 << 18;
 
@@ -104,7 +103,7 @@ public class SuyhIdGenerator {
         for (int i = 0; i < n; i++) {
             long id = startId + i;
             byte[] ubs = shuffle ? shuffle56Bits(id) : mapping56Bits(id);
-            uuids[i] = B32.encodeToString(ubs).replace("=", "");
+            uuids[i] = B32.encodeToString(ubs).replace(PAD_DEFAULT + "", "");
         }
 
         return uuids;
