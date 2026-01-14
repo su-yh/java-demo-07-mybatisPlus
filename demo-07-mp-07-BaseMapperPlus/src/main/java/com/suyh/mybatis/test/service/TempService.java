@@ -19,6 +19,6 @@ public class TempService {
 
     @PostConstruct
     public void init() {
-        // tempMapper.createTableIfNotExists();
+        tempMapper.createTableIfNotExists();
     }
 }

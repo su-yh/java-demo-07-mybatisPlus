@@ -65,7 +65,7 @@ public class CreateTableIfNotExists extends AbstractMethod {
         sb.append(String.join(",", columDefine));
 
         if (!primaryKeys.isEmpty()) {
-            sb.append("PRIMARY KEY(");
+            sb.append(", PRIMARY KEY(");
             sb.append(String.join(",", primaryKeys));
             sb.append(")");
         }
