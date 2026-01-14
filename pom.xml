@@ -23,5 +23,6 @@
         <module>demo-07-mp-04-conditionalOnMapper</module>
         <module>demo-07-mp-05-BaseMapperSafeX</module>
         <module>demo-07-mp-06-DataSource-Isolation</module>
+        <module>demo-07-mp-07-BaseMapperPlus</module>
     </modules>
 </project>
