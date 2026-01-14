@@ -22,20 +22,23 @@ public class FieldSchema {
     private String typeString;
     private String defaultValue;
     private String comment;
+    private Class<?> javaClazz;
 
     public FieldSchema() {}
 
-    public FieldSchema(String name, String typeString, String comment) {
+    public FieldSchema(String name, String typeString, String comment, Class<?> javaClazz) {
         this.name = name;
         this.typeString = typeString;
         this.comment = comment;
+        this.javaClazz = javaClazz;
     }
 
-    public FieldSchema(String name, String typeString, String defaultValue, String comment) {
+    public FieldSchema(String name, String typeString, String defaultValue, String comment, Class<?> javaClaz) {
         this.name = name;
         this.typeString = typeString;
         this.defaultValue = defaultValue;
         this.comment = comment;
+        this.javaClazz = javaClazz;
     }
 
     public String getName() {
