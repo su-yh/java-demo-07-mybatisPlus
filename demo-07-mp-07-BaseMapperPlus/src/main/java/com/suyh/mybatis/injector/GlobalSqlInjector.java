@@ -3,8 +3,7 @@ package com.suyh.mybatis.injector;
 import com.baomidou.mybatisplus.core.injector.AbstractMethod;
 import com.baomidou.mybatisplus.core.injector.DefaultSqlInjector;
 import com.baomidou.mybatisplus.core.metadata.TableInfo;
-import com.suyh.mybatis.injector.methods.InsertEntities;
-import com.suyh.mybatis.injector.methods.UpdateByIdForSafeVersion;
+import com.suyh.mybatis.injector.methods.CreateTableIfNotExists;
 
 import java.util.List;
 
@@ -16,10 +15,7 @@ public class GlobalSqlInjector extends DefaultSqlInjector {
     @Override
     public List<AbstractMethod> getMethodList(Class<?> mapperClass, TableInfo tableInfo) {
         List<AbstractMethod> methodList = super.getMethodList(mapperClass, tableInfo);
-        if (tableInfo.havePK()) {
-            methodList.add(new UpdateByIdForSafeVersion());
-            methodList.add(new InsertEntities());
-        }
+        methodList.add(new CreateTableIfNotExists());
         return methodList;
     }
 }

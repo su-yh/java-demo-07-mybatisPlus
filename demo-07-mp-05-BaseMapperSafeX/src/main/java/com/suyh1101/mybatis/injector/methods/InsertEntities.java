@@ -26,7 +26,7 @@ public class InsertEntities extends AbstractMethod {
 
     @Override
     public MappedStatement injectMappedStatement(Class<?> mapperClass, Class<?> modelClass, TableInfo tableInfo) {
-        boolean includeKeyColumn = keyColumn(tableInfo);
+        boolean includeKeyColumn = keyColumn(tableInfo);    // 这里主要判断是否为自增，非自增主键则老城厢发填充，否则由数据库自增处理主键id 的值。
         tableInfo.getKeyColumn();
         tableInfo.getKeyProperty();
 
